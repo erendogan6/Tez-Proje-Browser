@@ -69,6 +69,10 @@ class BrowserStateAdapter(private val browserActivity: BrowserActivity) : Browse
         browserActivity.showBookmarkOptionsDialog(bookmark)
     }
 
+    override fun showPhishingWarningDialog(url: String, confidence: Float) {
+        browserActivity.showPhishingWarningDialog(url, confidence)
+    }
+
     override fun showEditBookmarkDialog(
         title: String,
         url: String,

@@ -6,6 +6,7 @@ import acr.browser.lightning.adblock.BloomFilterAdBlocker
 import acr.browser.lightning.adblock.NoOpAdBlocker
 import acr.browser.lightning.browser.search.SearchBoxModel
 import acr.browser.lightning.device.BuildInfo
+import acr.browser.lightning.di.PhishingModule
 import acr.browser.lightning.dialog.LightningDialogBuilder
 import acr.browser.lightning.search.SuggestionsAdapter
 import acr.browser.lightning.settings.activity.ThemableSettingsActivity
@@ -24,7 +25,7 @@ import dagger.Module
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [AppModule::class, AppBindsModule::class, Submodules::class])
+@Component(modules = [AppModule::class, AppBindsModule::class, Submodules::class, PhishingModule::class])
 interface AppComponent {
 
     @Component.Builder

@@ -154,6 +154,9 @@ dependencies {
     // kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.21")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+    implementation("org.tensorflow:tensorflow-lite:2.17.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.5.0")
 }
 
 mezzanine {

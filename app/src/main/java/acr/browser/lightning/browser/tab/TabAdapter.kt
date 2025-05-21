@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.result.ActivityResult
 import androidx.core.graphics.createBitmap
 import dagger.assisted.Assisted
@@ -159,6 +160,10 @@ class TabAdapter @AssistedInject constructor(
 
     override fun reload() {
         webView.reload()
+    }
+
+    override fun getWebViewClient(): WebViewClient? {
+        return tabWebViewClient
     }
 
     override fun stopLoading() {

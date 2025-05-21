@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
+import android.webkit.WebViewClient
 import androidx.activity.result.ActivityResult
 import androidx.annotation.ColorInt
 import io.reactivex.rxjava3.core.Observable
@@ -79,6 +80,11 @@ interface TabModel {
      * Reload the page the browser is currently showing.
      */
     fun reload()
+
+    /**
+     * Get the web view client of the tab if available
+     */
+    fun getWebViewClient(): WebViewClient?
 
     /**
      * Stop loading the current page if it is loading. If the page is not loading, has no effect.

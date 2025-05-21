@@ -8,6 +8,8 @@ import acr.browser.lightning.databinding.DialogSslWarningBinding
 import acr.browser.lightning.extensions.resizeAndShow
 import acr.browser.lightning.js.TextReflow
 import acr.browser.lightning.log.Logger
+import acr.browser.lightning.phishing.PhishingDetector // Yeni import
+import acr.browser.lightning.phishing.PhishingEventBus
 import acr.browser.lightning.preference.UserPreferences
 import acr.browser.lightning.ssl.SslState
 import acr.browser.lightning.ssl.SslWarningPreferences
@@ -29,6 +31,9 @@ import androidx.webkit.WebViewAssetLoader.InternalStoragePathHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -47,6 +52,7 @@ class TabWebViewClient @AssistedInject constructor(
     private val sslWarningPreferences: SslWarningPreferences,
     private val textReflow: TextReflow,
     private val logger: Logger,
+    private val phishingDetector: PhishingDetector, // PhishingDetector enjekte edildi
     @Assisted("cache") private val cacheStoragePathHandler: InternalStoragePathHandler,
     @Assisted("files") private val filesStoragePathHandler: InternalStoragePathHandler,
 ) : WebViewClient() {
@@ -85,6 +91,11 @@ class TabWebViewClient @AssistedInject constructor(
     val finishedObservable = PublishSubject.create<Unit>()
 
     /**
+     * Phishing tespit edildiğinde bildiri yayınlar (URL, Güven Oranı)
+     */
+    val phishingDetectedObservable: PublishSubject<Pair<String, Float>> = PublishSubject.create()
+
+    /**
      * The current SSL state of the page.
      */
     var sslState: SslState = SslState.None
@@ -97,7 +108,7 @@ class TabWebViewClient @AssistedInject constructor(
 
     private fun shouldBlockRequest(pageUrl: String, requestUrl: String) =
         !allowListModel.isUrlAllowedAds(pageUrl) &&
-            adBlocker.isAd(requestUrl)
+                adBlocker.isAd(requestUrl)
 
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
@@ -119,6 +130,31 @@ class TabWebViewClient @AssistedInject constructor(
         urlObservable.onNext(url)
         goBackObservable.onNext(view.canGoBack())
         goForwardObservable.onNext(view.canGoForward())
+
+        view.evaluateJavascript("(function() { return document.documentElement.outerHTML; })();") { htmlContent ->
+            val cleanHtml = htmlContent?.replace("^\"|\"$".toRegex(), "")
+                ?.replace("\\\"", "\"")
+                ?.replace("\\n", "\n")
+                ?.replace("\\\\", "\\")
+
+            Observable.fromCallable {
+                phishingDetector.analyzeForPhishing(cleanHtml)
+            }
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ (isPhishing, confidence) ->
+                    if (isPhishing) {
+                        println("Phishing detected: $url with confidence: $confidence")
+                        // Global event bus ile bildirim yap
+                        PhishingEventBus.reportPhishing(url, confidence)
+                        // Eski observable'ı da yine çalıştır (geriye dönük uyumluluk için)
+                        phishingDetectedObservable.onNext(url to confidence)
+                    }
+                }, { error ->
+                    logger.log(TAG, "Phishing tespiti hatası: ${error.message}")
+                })
+        }
+
         view.postVisualStateCallback(1, object : WebView.VisualStateCallback() {
             override fun onComplete(requestId: Long) {
                 finishedObservable.onNext(Unit)
@@ -244,12 +280,12 @@ class TabWebViewClient @AssistedInject constructor(
     @Deprecated("Deprecated in Java")
     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
         return urlHandler.shouldOverrideLoading(view, url, headers) ||
-            super.shouldOverrideUrlLoading(view, url)
+                super.shouldOverrideUrlLoading(view, url)
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         return urlHandler.shouldOverrideLoading(view, request.url.toString(), headers) ||
-            super.shouldOverrideUrlLoading(view, request)
+                super.shouldOverrideUrlLoading(view, request)
     }
 
     override fun shouldInterceptRequest(

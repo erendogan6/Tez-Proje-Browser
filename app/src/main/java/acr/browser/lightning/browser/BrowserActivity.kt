@@ -487,6 +487,21 @@ abstract class BrowserActivity : ThemableBrowserActivity() {
         )
     }
 
+    fun showPhishingWarningDialog(url: String, confidence: Float) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.title_warningg) // 'title_warningg' yerine 'title_warning' olmalı
+            .setMessage(getString(R.string.message_phishing_detected, url, (confidence * 100).toInt()))
+            .setIcon(R.drawable.ic_unsecured)
+            .setCancelable(false)
+            .setPositiveButton(R.string.action_leave) { _, _ ->
+                presenter.onNavigateBack()
+            }
+            .setNegativeButton(R.string.action_continue_anyway) { _, _ ->
+                // Kullanıcı phishing uyarısını görmezden gelerek devam etmeyi seçti
+            }
+            .show()
+    }
+
     /**
      * @see BrowserContract.View.showBookmarkOptionsDialog
      */

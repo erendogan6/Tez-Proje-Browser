@@ -20,6 +20,7 @@ import acr.browser.lightning.browser.tab.NoOpInitializer
 import acr.browser.lightning.browser.tab.TabInitializer
 import acr.browser.lightning.browser.tab.TabModel
 import acr.browser.lightning.browser.tab.TabViewState
+import acr.browser.lightning.browser.tab.TabWebViewClient
 import acr.browser.lightning.browser.tab.UrlInitializer
 import acr.browser.lightning.browser.ui.TabConfiguration
 import acr.browser.lightning.browser.ui.UiConfiguration
@@ -45,6 +46,7 @@ import acr.browser.lightning.utils.isHistoryUrl
 import acr.browser.lightning.utils.isSpecialUrl
 import acr.browser.lightning.utils.smartUrlFilter
 import acr.browser.lightning.utils.value
+import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.core.net.toUri
 import io.reactivex.rxjava3.core.Maybe
@@ -231,6 +233,14 @@ class BrowserPresenter @Inject constructor(
 
         tabDisposable.dispose()
         tabDisposable = CompositeDisposable()
+        val webViewClient = tab.getWebViewClient()
+        if (webViewClient is TabWebViewClient) {
+            tabDisposable += webViewClient.phishingDetectedObservable
+                .observeOn(mainScheduler)
+                .subscribe { (url, confidence) ->
+                    view?.showPhishingWarningDialog(url, confidence)
+                }
+        }
         tabDisposable += Observable.combineLatest(
             tab.sslChanges().startWithItem(tab.sslState),
             tab.titleChanges().startWithItem(tab.title),

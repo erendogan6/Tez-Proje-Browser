@@ -86,6 +86,10 @@
     <string name="action_homepage">Default</string>
     <string name="action_back">Back</string>
     <string name="action_find">Find in page</string>
+    <string name="title_warningg">Güvenlik Uyarısı</string>
+    <string name="message_phishing_detected">%1$s adresinin phishing (oltalama) sitesi olma olasılığı yüksek (%2$d%% güven seviyesi). Bu site kişisel bilgilerinizi çalmaya çalışıyor olabilir.</string>
+    <string name="action_leave">Bu sayfadan ayrıl</string>
+    <string name="action_continue_anyway">Yine de devam et</string>
     <string name="download_pending">Starting download\u2026</string>
     <string name="cannot_download">Can only download \"http\" or \"https\" URLs.</string>
     <string name="problem_download">Invalid URL encountered, cannot download</string>

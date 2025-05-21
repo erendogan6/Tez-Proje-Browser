@@ -27,6 +27,14 @@ interface BrowserContract {
     interface View {
 
         /**
+         * Show a warning dialog for phishing site detection.
+         *
+         * @param url The URL of the phishing site
+         * @param confidence The model's confidence score that this is a phishing site (0.0-1.0)
+         */
+        fun showPhishingWarningDialog(url: String, confidence: Float)
+
+        /**
          * Render the [viewState] for the current tab in the browser.
          */
         fun renderState(viewState: BrowserViewState)
